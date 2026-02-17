@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- External CSS (lowest priority) -->
+    <style>
+        #bg-box {
+            background: url('external.jpg') center/cover no-repeat;
+        }
+    </style>
+
+    <!-- Internal CSS (middle priority) -->
+    <style>
+        #bg-box {
+            background: url('internal.jpg') center/cover no-repeat;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Inline CSS (highest priority) -->
+    <div id="bg-box" 
+         style="width:300px; height:200px; background:url('inline.jpg') center/cover no-repeat;">
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- External CSS written inside the same file for demo -->
+    <style>
+        /* External CSS (lowest priority) */
+        #headings {
+            color: green;
+        }
+    </style>
+
+    <style>
+        /* Internal CSS (medium priority) */
+        #headings {
+            color: blue;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Inline CSS (highest priority) -->
+    <div id="headings" style="color: red;">
+        This is the heading div
+    </div>
+
+</body>
+</html>
+

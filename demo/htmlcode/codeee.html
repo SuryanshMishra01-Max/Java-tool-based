@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Silicone Emporium — Adults Only</title>
+<style>
+  :root{
+    --bg:#0b0b0f; --card:#0f1115; --accent:#ff4d9e; --muted:#9aa0a6; --success:#16a34a;
+    --glass: rgba(255,255,255,0.03);
+    --glass-2: rgba(255,255,255,0.02);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+    background: linear-gradient(180deg,#07070a 0%, #0d0d12 100%);
+    color:#e6eef8;
+    min-height:100vh;
+  }
+
+  /* Floating background icons container */
+  .bg-anim { position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:0; }
+
+  /* Header */
+  header{
+    position:fixed; left:0; right:0; top:0; z-index:10;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 24px; backdrop-filter: blur(6px);
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-bottom:1px solid rgba(255,255,255,0.02);
+  }
+  .brand { display:flex; gap:12px; align-items:center; }
+  .brand h1 { margin:0; font-size:1.05rem; letter-spacing:0.6px; color:var(--accent); }
+  .auth { display:flex; gap:8px; align-items:center; }
+  .btn{
+    background:transparent; color:inherit; border:1px solid rgba(255,255,255,0.06);
+    padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600;
+  }
+  .btn.primary { background:linear-gradient(90deg,var(--accent), #ff7fbf); color:#0b0b0f; border:0; }
+  .small { font-size:0.9rem; padding:6px 10px; }
+
+  /* Layout */
+  main{ position:relative; z-index:5; padding:120px 20px 60px; max-width:1200px; margin:0 auto; }
+  .hero{
+    display:flex; gap:24px; align-items:center; justify-content:space-between; margin-bottom:24px;
+    background:var(--glass); padding:22px; border-radius:12px; border:1px solid rgba(255,255,255,0.02);
+  }
+  .hero-left h2{ margin:0 0 8px 0; font-size:1.6rem; color:#fff; }
+  .hero-left p{ margin:0; color:var(--muted); max-width:640px; }
+
+  /* Grid */
+  .grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); gap:18px; margin-top:20px; }
+  .card{
+    background:linear-gradient(180deg,var(--glass), var(--glass-2));
+    border-radius:12px; padding:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.03);
+  }
+  .media{
+    height:320px; border-radius:10px; overflow:hidden; background:#111; display:flex; align-items:center; justify-content:center;
+  }
+  .media img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .meta { padding:10px 6px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .meta h3{ margin:0; font-size:1rem; }
+  .price{ font-weight:700; color:var(--accent); }
+
+  .actions{ display:flex; gap:8px; padding:8px 6px 0 6px; }
+  .actions .btn { flex:1; }
+
+  /* Poster modal */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(2,6,23,0.6); display:none; align-items:center; justify-content:center; z-index:40;
+  }
+  .modal{ background:#0b0b0f; border-radius:10px; padding:12px; max-width:900px; width:95%; box-shadow:0 10px 40px rgba(0,0,0,0.6); }
+  .modal img{ width:100%; height:auto; border-radius:8px; display:block; }
+
+  /* Saved badge */
+  .saved-badge{
+    position:fixed; left:18px; bottom:18px; background:var(--success); color:#052e1f;
+    padding:8px 12px; border-radius:8px; display:none; font-weight:700; z-index:60;
+  }
+
+  /* Fan page area (hidden by default) */
+  .fan-page { margin-top:24px; background:rgba(255,255,255,0.02); padding:12px; border-radius:10px; display:none; }
+  .fan-grid{ display:flex; gap:12px; flex-wrap:wrap; }
+
+  /* Random code box */
+  .random-box{ display:flex; gap:12px; align-items:center; margin-left:auto; }
+  .code-output{ padding:8px 10px; border-radius:8px; background:rgba(255,255,255,0.02); border:1px dashed rgba(255,255,255,0.03); }
+
+  /* Age gate */
+  .age-gate { position:fixed; inset:0; background:linear-gradient(180deg, rgba(3,3,6,0.95), rgba(10,10,12,0.95)); z-index:100;
+    display:flex; align-items:center; justify-content:center; }
+  .age-card { background:#070709; padding:24px; border-radius:12px; max-width:520px; text-align:center; border:1px solid rgba(255,255,255,0.03); }
+  .age-card h2{ margin:0 0 8px 0; font-size:1.2rem; }
+  .age-card p{ color:var(--muted); margin:0 0 18px 0; }
+
+  /* tiny helper */
+  .right { margin-left:auto; }
+  .muted { color:var(--muted); font-size:0.95rem; }
+  .note { font-size:0.85rem; color:var(--muted); margin-top:8px; }
+
+  /* responsive */
+  @media (max-width:720px){
+    .media{ height:240px; }
+    .hero{ flex-direction:column; align-items:flex-start; }
+  }
+
+  /* floating icon animation (created dynamically in JS with random sizes/positions/delays) */
+  @keyframes floatUp{
+    0% { transform: translateY(110vh) scale(0.6) rotate(0deg); opacity:0; }
+    10%{ opacity:1; }
+    100% { transform: translateY(-20vh) scale(1) rotate(360deg); opacity:0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Background animated layer -->
+<div class="bg-anim" id="bgAnim" aria-hidden="true"></div>
+
+<header>
+  <div class="brand">
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2v20M2 12h20" stroke="url(#g)" stroke-width="1.2" stroke-linecap="round"/></svg>
+    <h1>Silicone Emporium</h1>
+    <div class="note muted">Premium companions • Discreet shipping</div>
+  </div>
+
+  <div class="auth">
+    <div class="random-box">
+      <button class="btn small" id="randomBtn" title="Get a random promo or tip">Random Code / Tip</button>
+      <div class="code-output" id="codeOut">—</div>
+    </div>
+
+    <button class="btn" id="fanBtn">Fan Page</button>
+    <button class="btn" id="regBtn">Register</button>
+    <button class="btn" id="loginBtn">Login</button>
+    <button class="btn primary" id="googleBtn">Sign in with Google</button>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="hero-left">
+      <h2>High-quality silicone companions — tasteful, durable, and safe</h2>
+      <p class="muted">Browse silicone dolls and adult accessories. All products are priced at <strong>$99</strong> for demo purposes. Replace placeholder images with licensed photos of consenting adults only. This demo does not process payments.</p>
+      <p class="note">Legal: You must be 18+ to view or sell adult products. Use licensed images & respect model consent.</p>
+    </div>
+    <div style="display:flex; gap:12px; align-items:center;">
+      <div style="text-align:right;">
+        <div class="muted">Logged in as:</div>
+        <div id="userLabel" style="font-weight:700">Guest</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Product grid: dolls -->
+  <h3 style="margin-top:8px">Silicone Dolls</h3>
+  <div class="grid" id="productsGrid">
+    <!-- Product cards are injected by JS -->
+  </div>
+
+  <!-- Dildos section -->
+  <h3 style="margin-top:18px">Adult Accessories</h3>
+  <div class="grid" id="accessoriesGrid">
+    <!-- accessories injected by JS -->
+  </div>
+
+  <!-- Fan page -->
+  <div class="fan-page" id="fanPage">
+    <h3>Your Fan Page — Saved Items</h3>
+    <div class="fan-grid" id="fanGrid"></div>
+    <p class="note">Saved items persist locally in your browser for this demo. They are not stored on a server.</p>
+  </div>
+
+  <div style="margin-top:22px; color:var(--muted); font-size:0.9rem;">
+    <strong>Notice:</strong> This is a demo template. Do not use images from Google search results without confirming license/permission. Only use images of adults who have given clear consent.
+  </div>
+</main>
+
+<!-- Poster modal -->
+<div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="btn" id="closeModal" style="float:right;margin-top:-8px;margin-right:-8px">Close</button>
+    <img id="modalImg" alt="Poster preview" src="">
+    <div style="display:flex; gap:8px; margin-top:10px;">
+      <a id="downloadPoster" class="btn primary" download>Download Poster</a>
+      <button class="btn" id="saveFromModal">Save to Fan Page</button>
+    </div>
+  </div>
+</div>
+
+<!-- Age gate -->
+<div class="age-gate" id="ageGate" role="dialog" aria-modal="true">
+  <div class="age-card">
+    <h2>Are you 18 years of age or older?</h2>
+    <p>By entering you confirm that you are an adult and will view adult-oriented products.</p>
+    <div style="display:flex; gap:10px; justify-content:center; margin-top:12px;">
+      <button class="btn primary" id="ageYes">Yes — Enter</button>
+      <button class="btn" id="ageNo">No — Exit</button>
+    </div>
+    <p class="muted" style="margin-top:12px">If you are not 18+, you must exit now.</p>
+  </div>
+</div>
+
+<!-- Saved badge -->
+<div class="saved-badge" id="savedBadge">✔ Saved</div>
+
+<script>
+/* -------------------------
+   Demo data & placeholder images
+   Replace with licensed images before going live.
+   ------------------------- */
+const PRODUCTS = [
+  { id:'doll-1', title:'Evelyn • Silicone Companion', img:'https://picsum.photos/seed/doll1/600/800', price:99 },
+  { id:'doll-2', title:'Aurora • Luxury Doll', img:'https://picsum.photos/seed/doll2/600/800', price:99 },
+  { id:'doll-3', title:'Luna • Soft Touch', img:'https://picsum.photos/seed/doll3/600/800', price:99 },
+  { id:'doll-4', title:'Nova • Real Feel', img:'https://picsum.photos/seed/doll4/600/800', price:99 }
+];
+
+const ACCESSORIES = [
+  { id:'acc-1', title:'Silicone Dildo — Classic', img:'https://picsum.photos/seed/acc1/600/600', price:99 },
+  { id:'acc-2', title:'Silicone Dildo — Curved', img:'https://picsum.photos/seed/acc2/600/600', price:99 },
+  { id:'acc-3', title:'Silicone Dildo — Compact', img:'https://picsum.photos/seed/acc3/600/600', price:99 }
+];
+
+/* -------------------------
+   Utilities
+   ------------------------- */
+const el = id => document.getElementById(id);
+const showSavedBadge = () => {
+  const b = el('savedBadge'); b.style.display='block';
+  setTimeout(()=>b.style.display='none', 2400);
+};
+
+function formatPrice(n){ return '$' + Number(n).toFixed(2); }
+
+/* -------------------------
+   Render products
+   ------------------------- */
+function makeProductCard(p){
+  const wrapper = document.createElement('div'); wrapper.className='card';
+  wrapper.innerHTML = `
+    <div class="media">
+      <img src="${p.img}" alt="${p.title}">
+    </div>
+    <div class="meta">
+      <h3>${p.title}</h3>
+      <div class="price">${formatPrice(p.price)}</div>
+    </div>
+    <div class="actions">
+      <button class="btn" data-action="poster" data-id="${p.id}" data-img="${p.img}">Poster</button>
+      <button class="btn primary" data-action="save" data-id="${p.id}">Save</button>
+    </div>
+  `;
+  return wrapper;
+}
+
+function renderAll(){
+  const grid = el('productsGrid'); grid.innerHTML='';
+  PRODUCTS.forEach(p => grid.appendChild(makeProductCard(p)));
+  const accGrid = el('accessoriesGrid'); accGrid.innerHTML='';
+  ACCESSORIES.forEach(p => accGrid.appendChild(makeProductCard(p)));
+}
+renderAll();
+
+/* -------------------------
+   Poster modal handling
+   ------------------------- */
+const modal = el('modalBackdrop');
+const modalImg = el('modalImg');
+let currentModalItemId = null;
+
+document.body.addEventListener('click', e => {
+  const target = e.target;
+  if(target.dataset && target.dataset.action === 'poster'){
+    const img = target.dataset.img;
+    const id = target.dataset.id;
+    modalImg.src = img;
+    el('downloadPoster').href = img;
+    modal.style.display = 'flex';
+    currentModalItemId = id;
+  }
+  if(target.dataset && target.dataset.action === 'save'){
+    const id = target.dataset.id;
+    saveItemForUser(id);
+  }
+});
+
+el('closeModal').addEventListener('click', ()=> modal.style.display='none');
+el('saveFromModal').addEventListener('click', ()=>{
+  if(currentModalItemId) saveItemForUser(currentModalItemId);
+  modal.style.display='none';
+});
+
+/* -------------------------
+   Age gate
+   ------------------------- */
+const ageGate = el('ageGate');
+if(localStorage.getItem('ageVerified') === 'yes'){
+  ageGate.style.display = 'none';
+} else {
+  ageGate.style.display = 'flex';
+}
+el('ageYes').addEventListener('click', ()=>{
+  localStorage.setItem('ageVerified','yes');
+  ageGate.style.display='none';
+});
+el('ageNo').addEventListener('click', ()=>{
+  // simple exit: replace content with message
+  document.body.innerHTML = '<div style="height:100vh;display:flex;align-items:center;justify-content:center;color:#fff;background:#000"><div style="max-width:700px;padding:20px;text-align:center"><h2>Access Denied</h2><p style="color:#bbb">You must be 18+ to access this site.</p></div></div>';
+});
+
+/* -------------------------
+   Simple register/login (demo only)
+   - stores users in localStorage under key "demoUsers"
+   - stores currentUser as "demoCurrentUser"
+   ------------------------- */
+function getUsers(){ return JSON.parse(localStorage.getItem('demoUsers') || '{}'); }
+function setUsers(u){ localStorage.setItem('demoUsers', JSON.stringify(u)); }
+function getCurrent(){ return JSON.parse(localStorage.getItem('demoCurrentUser') || 'null'); }
+function setCurrent(u){ localStorage.setItem('demoCurrentUser', JSON.stringify(u)); updateUserUI(); }
+
+function showPrompt(title, fields, callback){
+  // minimal prompt modal using prompt() for brevity (keeps code self-contained)
+  // fields: [{name:'username', label:'Username'}, ...]
+  try {
+    const data = {};
+    for(const f of fields){
+      const val = prompt(f.label || f.name);
+      if(val === null) return;
+      data[f.name] = val.trim();
+    }
+    callback(data);
+  } catch(e){
+    alert('Operation cancelled');
+  }
+}
+
+function updateUserUI(){
+  const cur = getCurrent();
+  el('userLabel').innerText = cur ? (cur.displayName || cur.username) : 'Guest';
+  if(cur){
+    // show logout and hide register/login
+    el('regBtn').style.display='none';
+    el('loginBtn').textContent = 'Logout';
+    el('loginBtn').dataset.logged = 'true';
+  } else {
+    el('regBtn').style.display='inline-block';
+    el('loginBtn').textContent = 'Login';
+    el('loginBtn').dataset.logged = '';
+  }
+}
+updateUserUI();
+
+el('regBtn').addEventListener('click', ()=>{
+  showPrompt('Register', [{name:'username', label:'Username'}, {name:'password', label:'Password (demo only)'}], data=>{
+    if(!data.username || !data.password){ alert('Please provide both'); return; }
+    const users = getUsers();
+    if(users[data.username]){ alert('Username taken'); return; }
+    users[data.username] = { username:data.username, password:data.password, displayName:data.username };
+    setUsers(users);
+    alert('Registered. You can now login.');
+  });
+});
+
+el('loginBtn').addEventListener('click', ()=>{
+  const logged = getCurrent();
+  if(logged){
+    // logout
+    localStorage.removeItem('demoCurrentUser');
+    updateUserUI();
+    return;
+  }
+  showPrompt('Login', [{name:'username', label:'Username'}, {name:'password', label:'Password'}], data=>{
+    const users = getUsers();
+    const u = users[data.username];
+    if(!u || u.password !== data.password){ alert('Invalid'); return; }
+    setCurrent({ username:u.username, displayName:u.displayName });
+    updateUserUI();
+  });
+});
+
+/* Simulated Google sign-in */
+el('googleBtn').addEventListener('click', ()=>{
+  // demo: create or use 'google_user'
+  const displayName = prompt('Simulated Google Sign-in: Enter name to continue as (demo):', 'GoogleUser');
+  if(!displayName) return;
+  const userKey = 'google_'+displayName.replace(/\s+/g,'_');
+  const users = getUsers();
+  users[userKey] = { username:userKey, password:'', displayName };
+  setUsers(users);
+  setCurrent({ username:userKey, displayName });
+  updateUserUI();
+});
+
+/* -------------------------
+   Save items to Fan Page (localStorage per user)
+   ------------------------- */
+function saveItemForUser(itemId){
+  const cur = getCurrent();
+  if(!cur){ alert('Please register or login to save items.'); return; }
+  const key = 'fan_saved_'+cur.username;
+  const saved = JSON.parse(localStorage.getItem(key) || '[]');
+  // find the item
+  const all = PRODUCTS.concat(ACCESSORIES);
+  const item = all.find(x => x.id === itemId);
+  if(!item) return;
+  if(saved.some(s=>s.id===item.id)){ showSavedBadge(); return; } // already
+  saved.push(item);
+  localStorage.setItem(key, JSON.stringify(saved));
+  showSavedBadge();
+  refreshFanPage();
+}
+
+/* Fan page toggle */
+el('fanBtn').addEventListener('click', ()=>{
+  const pane = el('fanPage');
+  pane.style.display = pane.style.display === 'block' ? 'none' : 'block';
+  refreshFanPage();
+});
+
+function refreshFanPage(){
+  const cur = getCurrent();
+  const grid = el('fanGrid'); grid.innerHTML='';
+  if(!cur){
+    grid.innerHTML = '<div class="muted">Log in to see saved items on your fan page.</div>';
+    return;
+  }
+  const key = 'fan_saved_'+cur.username;
+  const saved = JSON.parse(localStorage.getItem(key) || '[]');
+  if(saved.length === 0){
+    grid.innerHTML = '<div class="muted">No saved items yet. Save items from the product list.</div>'; return;
+  }
+  for(const s of saved){
+    const d = document.createElement('div'); d.style.width='160px'; d.style.background='rgba(255,255,255,0.03)'; d.style.padding='8px'; d.style.borderRadius='8px';
+    d.innerHTML = <div style="height:120px;overflow:hidden;border-radius:6px"><img src="${s.img}" style="width:100%;height:120px;object-fit:cover" alt="${s.title}"></div><div style="margin-top:8px;font-weight:700">${s.title}</div><div style="color:var(--muted)">${formatPrice(s.price)}</div>;
+    grid.appendChild(d);
+  }
+}
+
+/* -------------------------
+   Random promo code / non-explicit tips generator
+   ------------------------- */
+const PROMOS = Array.from({length:12},(_,i)=>('PROMO'+(1000+i)));
+const TIPS = [
+  "Communication and consent are the foundation of good intimacy.",
+  "Take time to learn what you and your partner like — slowly and respectfully.",
+  "Clean and store silicone products according to manufacturer instructions.",
+  "Open, compassionate communication improves relationships long-term.",
+  "Prioritize safety: follow hygiene and usage guidance for products."
+];
+
+el('randomBtn').addEventListener('click', ()=>{
+  // randomly choose between promo or tip
+  if(Math.random() < 0.6){
+    const code = PROMOS[Math.floor(Math.random()*PROMOS.length)];
+    el('codeOut').textContent = code + ' (copyable)';
+    copyToClipboard(code);
+    // quick flash
+    el('codeOut').style.opacity=0.6; setTimeout(()=>el('codeOut').style.opacity=1,200);
+  } else {
+    const tip = TIPS[Math.floor(Math.random()*TIPS.length)];
+    el('codeOut').textContent = tip;
+  }
+});
+
+function copyToClipboard(text){
+  try{
+    navigator.clipboard?.writeText(text).catch(()=>{});
+  }catch(e){}
+}
+
+/* -------------------------
+   Background floating icons (lips & tongue)
+   ------------------------- */
+const bgRoot = el('bgAnim');
+const ICONS = ['👄','👅'];
+function spawnFloating(){
+  const span = document.createElement('div');
+  span.className='float-emoji';
+  span.style.position='absolute';
+  const size = 28 + Math.floor(Math.random()*42);
+  span.style.fontSize = size+'px';
+  span.style.left = Math.random()*100 + 'vw';
+  span.style.top = (80 + Math.random()*30) + 'vh'; // start below viewport
+  span.style.opacity = (0.6 + Math.random()*0.4).toString();
+  span.innerText = ICONS[Math.floor(Math.random()*ICONS.length)];
+  const dur = 6 + Math.random()*10;
+  span.style.animation = floatUp ${dur}s linear forwards;
+  // random rotate anchor
+  const rot = Math.floor(Math.random()*360);
+  span.style.transform = rotate(${rot}deg);
+  bgRoot.appendChild(span);
+  // remove after duration+1s
+  setTimeout(()=>span.remove(), (dur+1)*1000);
+}
+setInterval(spawnFloating, 650);
+
+/* -------------------------
+   Accessibility & small helpers
+   ------------------------- */
+// close modal on backdrop click
+el('modalBackdrop').addEventListener('click', (ev)=>{
+  if(ev.target === el('modalBackdrop')) el('modalBackdrop').style.display='none';
+});
+
+/* initialize fan page view if user logged in */
+refreshF<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ayush Music Class 🎶 | One Piece Vibes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Pirate fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'IM Fell English SC', serif;
+      background: #00171f;
+      color: #f4e1c1;
+      overflow: hidden; /* prevent scrolling until verified */
+    }
+
+    /* AGE GATE OVERLAY */
+    #age-gate {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.95);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      text-align: center;
+      padding: 20px;
+    }
+    #age-gate h1 {
+      font-family: 'Pirata One', cursive;
+      font-size: 36px;
+      margin-bottom: 15px;
+    }
+    #age-gate p {
+      font-size: 18px;
+      margin-bottom: 25px;
+    }
+    .gate-btn {
+      background: #ff6347;
+      border: none;
+      color: white;
+      font-size: 18px;
+      padding: 12px 24px;
+      margin: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .gate-btn:hover {
+      background: #ffd700;
+      color: black;
+    }
+
+    /* MAIN CONTENT HIDDEN INITIALLY */
+    #main-content {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Age Gate -->
+  <div id="age-gate">
+    <h1>Are you 18 years of age or older?</h1>
+    <p>By entering, you confirm that you are an adult and will only view appropriate content.</p>
+    <button class="gate-btn" onclick="enterSite()">✅ Yes — Enter</button>
+    <button class="gate-btn" onclick="exitSite()">❌ No — Exit</button>
+    <p style="margin-top:15px; font-size:14px; color:#bbb;">If you are not 18+, you must exit now.</p>
+  </div>
+
+  <!-- Main Website -->
+  <div id="main-content">
+    <h1>🎶 Ayush Music Class | One Piece Vibes 🎶</h1>
+    <p>Welcome to the main site! 🚀</p>
+  </div>
+
+  <script>
+    function enterSite() {
+      document.getElementById("age-gate").style.display = "none";
+      document.getElementById("main-content").style.display = "block";
+      document.body.style.overflow = "auto"; // allow scrolling again
+    }
+    function exitSite() {
+      alert("You must be 18+ to enter. Redirecting...");
+      window.location.href = "https://www.google.com"; // redirect out
+    }
+  </script>
+</body>
+</html>
