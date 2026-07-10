@@ -2,5 +2,9 @@
     "files.associations": {
         "iostream": "cpp"
     },
-    "livePreview.defaultPreviewPath": "/clgcoode/2nd.html"
+    "livePreview.defaultPreviewPath": "/clgcoode/2nd.html",
+    "C_Cpp.default.compilerPath": "C:/MinGW/bin/g++.exe",
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,
+    "editor.formatOnSave": true
 }

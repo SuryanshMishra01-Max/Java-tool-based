@@ -56,8 +56,34 @@ for(int i=0; i<name.length();i++){
 
 cout<<name.substr(0,i+1)<<endl; */
 
-string s1="broo" , s2="mance";
+/* string s1="broo" , s2="mance";
 s1.swap(s2);
 cout<<s1;
-return 0;
+return 0; */
+
+    int count = 0, n;
+    cin >> n;
+
+    for(int i = 1; i <= n; i++){
+        if(n % i == 0)
+            count++;
+    }
+
+    if(count == 2)
+        cout << "yes";
+    else
+        cout << "not a prime number";
+
+
+        
+        bool isPrime(int n){
+    if(n <= 1) return false;
+
+    for(int i = 2; i < n; i++){
+        if(n % i == 0)
+            return false;
+    }
+    return true;
 }
+}
+
